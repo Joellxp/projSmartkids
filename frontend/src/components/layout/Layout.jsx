@@ -1,5 +1,6 @@
 // filepath: src/components/layout/Layout.jsx
 import React, { useState } from "react";
+import Button from "../base/Button"; // Ajuste o caminho conforme necessário
 
 const Layout = ({ sidebar, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -7,7 +8,7 @@ const Layout = ({ sidebar, children }) => {
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf5" }}>
       {/* Botão de menu fixo */}
-      <button
+      <Button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         style={{
           position: "fixed",
@@ -28,7 +29,7 @@ const Layout = ({ sidebar, children }) => {
         aria-label="Abrir menu"
       >
         ☰
-      </button>
+      </Button>
       {/* Sidebar retrátil */}
       <div
         style={{

@@ -6,14 +6,15 @@ import Loader from "../base/Loader";
 import Notification from "../base/Notification";
 import { useParams } from "react-router-dom";
 import Input from "../base/Input"; // Certifique-se de que o caminho para o componente Input está correto
+import { useNotification } from "../../context/NotificationContext";
 
 function TripDetails() {
   const { id } = useParams();
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
   const [students, setStudents] = useState([]);
   const [studentId, setStudentId] = useState(""); // Estado para o ID do estudante a ser adicionado
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     fetchTrip();
@@ -31,7 +32,7 @@ function TripDetails() {
       setTrip(response.data);
       setStudents(response.data.students || []);
     } catch (error) {
-      setNotification("Erro ao carregar detalhes da viagem.");
+      showNotification("Erro ao carregar detalhes da viagem.");
     } finally {
       setLoading(false);
     }
@@ -47,10 +48,10 @@ function TripDetails() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNotification("Viagem finalizada.");
+      showNotification("Viagem finalizada.");
       fetchTrip();
     } catch (error) {
-      setNotification("Erro ao finalizar viagem.");
+      showNotification("Erro ao finalizar viagem.");
     } finally {
       setLoading(false);
     }
@@ -65,10 +66,10 @@ function TripDetails() {
         { tripId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNotification("Presença marcada.");
+      showNotification("Presença marcada.");
       fetchTrip();
     } catch (error) {
-      setNotification("Erro ao marcar presença.");
+      showNotification("Erro ao marcar presença.");
     } finally {
       setLoading(false);
     }
@@ -84,11 +85,11 @@ function TripDetails() {
         { studentId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNotification("Estudante adicionado.");
+      showNotification("Estudante adicionado.");
       setStudentId("");
       fetchTrip();
     } catch (error) {
-      setNotification("Erro ao adicionar estudante.");
+      showNotification("Erro ao adicionar estudante.");
     } finally {
       setLoading(false);
     }
@@ -139,7 +140,7 @@ function TripDetails() {
       ) : (
         <p>Viagem não encontrada.</p>
       )}
-      {notification && <Notification>{notification}</Notification>}
+      <Notification />
     </Card>
   );
 }

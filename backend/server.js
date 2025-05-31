@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const sequelize = require("./database/db");
 const User = require("./models/User");
 const Trip = require("./models/Trip");
+const Payment = require('./models/Payment');
 const userRoutes = require("./routes/userRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const fileRoutes = require("./routes/fileRoutes");
@@ -12,6 +13,11 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const path = require('path');
+require('dotenv').config();
+const rateLimit = require('express-rate-limit');
+const errorHandler = require('./middleware/errorHandler');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 
 require("./models"); // Isso aplica os relacionamentos
 
@@ -40,10 +46,16 @@ app.use('/uploads', express.static('uploads'));
 // Importação do JWT
 const jwt = require("jsonwebtoken");
 
-const accessSecret = "chave_acesso_super_secreta";
-const refreshSecret = "chave_refresh_token_super_secreta";
+const accessSecret = process.env.JWT_ACCESS_SECRET;
+const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
-app.post("/login", async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo de 5 tentativas por IP
+  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' }
+});
+
+app.post("/login", loginLimiter, async (req, res) => {
 	const { username, password } = req.body;
 	
 	// Busca usuário no banco
@@ -60,8 +72,7 @@ app.post("/login", async (req, res) => {
 		accessSecret,
 		{ expiresIn: "30m" }
 	);
-	
-	// Gera refresh token (válido por 7 dias)
+
 	const refreshToken = jwt.sign(
 		{ username: user.username },
 		refreshSecret,
@@ -94,20 +105,24 @@ const createAdminUser = async () => {
 };
 
 // Sincroniza o banco de dados e inicia o servidor
-sequelize.sync()
-	.then(() => {
-		// Cria o usuário admin ao iniciar o servidor
-		createAdminUser().then(() => {
-			app.listen(port, () => {
-				console.log(`Servidor rodando em http://localhost:${port}`);
-			});
-		});
-	})
-	.catch(err => {
-		console.error("Erro ao sincronizar o banco de dados:", err);
-	});
+sequelize.sync({ alter: true }) // ou { force: true } para recriar tudo (apaga dados!)
+  .then(() => {
+    console.log('Banco sincronizado!');
+    // Cria o usuário admin ao iniciar o servidor
+    createAdminUser().then(() => {
+        app.listen(port, () => {
+            console.log(`Servidor rodando em http://localhost:${port}`);
+        });
+    });
+  })
+  .catch(err => {
+    console.error("Erro ao sincronizar o banco de dados:", err);
+  });
+ 
+// Sempre antes do app.listen:
+app.use(errorHandler);
 
 // No final das rotas do backend:
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+module.exports = app;

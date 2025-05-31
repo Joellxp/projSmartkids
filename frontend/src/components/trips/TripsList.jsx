@@ -4,12 +4,13 @@ import Card from "../base/Card";
 import Button from "../base/Button";
 import Loader from "../base/Loader";
 import Notification from "../base/Notification";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
+import { useNotification } from "../../context/NotificationContext";
 
 function TripsList({ onSelectTrip }) {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
+  const { showNotification, notification } = useNotification();
 
   useEffect(() => {
     fetchTrips();
@@ -28,7 +29,7 @@ function TripsList({ onSelectTrip }) {
       });
       setTrips(response.data.trips || []);
     } catch (error) {
-      setNotification("Erro ao carregar viagens.");
+      showNotification("Erro ao carregar viagens.");
     } finally {
       setLoading(false);
     }

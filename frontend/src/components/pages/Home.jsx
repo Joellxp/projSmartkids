@@ -1,100 +1,99 @@
-import React, { useEffect, useState } from "react";
-import axiosInstance from "../../services/axiosInstance";
-import Card from "../base/Card";
-import Button from "../base/Button";
+import React, { useState } from "react";
+import { Container, Typography, Button, Box, Paper, Grid } from "@mui/material";
 
-function Home() {
-	const [users, setUsers] = useState([]);
-	const [notification, setNotification] = useState("");
-	const token = sessionStorage.getItem("token");
-	const fullName = sessionStorage.getItem("fullName") || "";
-	const role = sessionStorage.getItem("role") || "";
-	const photo = sessionStorage.getItem("photo") || "";
+export default function Home() {
+    const [showAjuda, setShowAjuda] = useState(false);
 
-	useEffect(() => {
-		// Não precisa mais checar token aqui!
-		axiosInstance.get("http://localhost:3001/users", {
-			headers: { Authorization: `Bearer ${token}` }
-		})
-		.then(response => {
-			setUsers(response.data);
-		})
-		.catch(error => {
-			console.error("Erro ao carregar usuários:", error);
-			setNotification("Token inválido ou expirado.");
-		});
-	}, [token]);
+    const fullName = sessionStorage.getItem("fullName") || "";
+    const role = sessionStorage.getItem("role") || "";
 
-	// Exemplo de saudação e resumo dinâmico por papel
-	const getRoleLabel = (role) => {
-		switch (role) {
-			case "admin":
-				return "Administrador";
-			case "condutor":
-				return "Condutor";
-			case "responsavel":
-				return "Responsável";
-			case "common":
-				return "Usuário Comum";
-			default:
-				return "";
-		}
-	};
+    const getRoleLabel = (role) => {
+        switch (role) {
+            case "admin": return "Administrador";
+            case "condutor": return "Condutor";
+            case "responsavel": return "Responsável";
+            case "common": return "Usuário Comum";
+            default: return "";
+        }
+    };
 
-	return (
-		<Card style={{ marginTop: 40 }}>
-			<h1 style={{ textAlign: "center", color: "#6aa839", fontSize: 36, marginBottom: 8 }}>
-				Bem-vindo, {fullName}!
-			</h1>
-			<p style={{ textAlign: "center", fontSize: 20, marginBottom: 32 }}>
-				Seu papel: <strong>{getRoleLabel(role)}</strong>
-			</p>
-			{/* Aqui você pode adicionar cards/resumos dinâmicos por papel */}
-			{/* Exemplo: */}
-			{role === "admin" && (
-				<div style={{ marginTop: "32px" }}>
-					<h3>Resumo do sistema</h3>
-					<ul>
-						<li>Visualize e gerencie usuários, viagens e pagamentos.</li>
-						<li>Acesse relatórios e arquivos do sistema.</li>
-					</ul>
-				</div>
-			)}
-			{role === "condutor" && (
-				<div style={{ marginTop: "32px" }}>
-					<h3>Suas viagens</h3>
-					<ul>
-						<li>Crie, finalize e gerencie suas viagens.</li>
-						<li>Adicione estudantes e marque presença.</li>
-					</ul>
-				</div>
-			)}
-			{role === "responsavel" && (
-				<div style={{ marginTop: "32px" }}>
-					<h3>Seus estudantes</h3>
-					<ul>
-						<li>Visualize viagens e histórico de presença dos estudantes.</li>
-						<li>Realize pagamentos escolares.</li>
-					</ul>
-				</div>
-			)}
-			{role === "common" && (
-				<div style={{ marginTop: "32px" }}>
-					<h3>Sua participação</h3>
-					<ul>
-						<li>Veja suas viagens e histórico de presença.</li>
-						<li>Realize pagamentos escolares.</li>
-					</ul>
-				</div>
-			)}
-			<Button onClick={() => {
-    sessionStorage.clear();
-    window.location.href = "/";
-}}>
-    Sair
-</Button>
-		</Card>
-	);
+    const isLogged = !!fullName;
+
+    if (showAjuda) {
+        return (
+            <Container maxWidth="sm" sx={{ mt: 8 }}>
+                <Paper elevation={3} sx={{ p: 4, textAlign: "center" }}>
+                    <Typography variant="h5" color="primary" gutterBottom>
+                        Ajuda (simulação)
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Aqui seria o conteúdo de ajuda ou FAQ.<br />
+                        (Funcionalidade em desenvolvimento)
+                    </Typography>
+                    <Button variant="outlined" color="primary" onClick={() => setShowAjuda(false)}>
+                        Voltar à Home
+                    </Button>
+                </Paper>
+            </Container>
+        );
+    }
+
+    return (
+        <Container maxWidth="md" sx={{ mt: 8 }}>
+            <Paper elevation={3} sx={{ p: 4, textAlign: "center", borderRadius: 3 }}>
+                <Typography variant="h3" color="primary" gutterBottom sx={{ fontWeight: 700 }}>
+                    Bem-vindo ao SmartKids
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                    Plataforma de gestão de viagens escolares.
+                </Typography>
+                {isLogged && (
+                    <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+                        Olá, {fullName} ({getRoleLabel(role)})
+                    </Typography>
+                )}
+                <Box sx={{ mb: 3 }}>
+                    {!isLogged ? (
+                        <>
+                            <Button variant="contained" color="primary" sx={{ mr: 2, minWidth: 120 }}>
+                                Login
+                            </Button>
+                            <Button variant="outlined" color="secondary" sx={{ minWidth: 120 }}>
+                                Saiba mais
+                            </Button>
+                        </>
+                    ) : (
+                        <Grid container spacing={2} justifyContent="center">
+                            <Grid item>
+                                <Button variant="contained" color="primary">
+                                    Minhas Viagens
+                                </Button>
+                            </Grid>
+                            <Grid item>
+                                <Button variant="outlined" color="primary">
+                                    Pagamentos
+                                </Button>
+                            </Grid>
+                            <Grid item>
+                                <Button variant="outlined" color="secondary">
+                                    Perfil
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    )}
+                </Box>
+                {isLogged && (
+                    <Typography variant="body2" color="text.secondary">
+                        Último acesso: {/* aqui você pode exibir uma data real se quiser */}
+                        {new Date().toLocaleString("pt-BR")}
+                    </Typography>
+                )}
+                <Box sx={{ mt: 2 }}>
+                    <Button variant="text" color="secondary" onClick={() => setShowAjuda(true)}>
+                        Ajuda
+                    </Button>
+                </Box>
+            </Paper>
+        </Container>
+    );
 }
-
-export default Home;

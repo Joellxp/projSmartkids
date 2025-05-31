@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import Card from "../base/Card";
 import Loader from "../base/Loader";
-import Notification from "../base/Notification";
+// import Notification from "../base/Notification";
+import { useNotification } from "../../context/NotificationContext";
 
 function Reports() {
   const [totals, setTotals] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     fetchTotals();
@@ -24,7 +25,7 @@ function Reports() {
       );
       setTotals(response.data);
     } catch (error) {
-      setNotification("Erro ao carregar relatório.");
+      showNotification("Erro ao carregar relatório.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,6 @@ function Reports() {
       ) : (
         <p>Nenhum dado encontrado.</p>
       )}
-      {notification && <Notification>{notification}</Notification>}
     </Card>
   );
 }

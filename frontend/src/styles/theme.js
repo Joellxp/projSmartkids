@@ -1,11 +1,18 @@
-export const theme = {
-  colors: {
-    primary: "#6aa839",      // Verde principal
-    secondary: "#f5e9da",    // Bege claro
-    background: "#f8faf5",   // Fundo mais claro
-    text: "#222",            // Texto escuro
-    white: "#fff"
+import { createTheme } from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+    primary: { main: '#6aa839' }, // Verde principal
+    secondary: { main: '#f5e9da' }, // Bege claro
+    background: { default: '#f8faf5' },
+    text: { primary: '#222', secondary: '#555' }
   },
-  borderRadius: "16px",
-  fontFamily: "'Nunito', 'Quicksand', 'Poppins', sans-serif"
-};
+  shape: {
+    borderRadius: 16,
+  },
+  typography: {
+    fontFamily: "'Nunito', 'Quicksand', 'Poppins', sans-serif"
+  }
+});
+
+export default theme;

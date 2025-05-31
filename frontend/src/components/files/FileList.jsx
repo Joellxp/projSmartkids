@@ -5,11 +5,12 @@ import Card from "../base/Card";
 import Loader from "../base/Loader";
 import Input from "../base/Input";
 import Notification from "../base/Notification";
+import { useNotification } from "../../context/NotificationContext";
 
 function FileList() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
+  const { showNotification, notification } = useNotification();
   const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ function FileList() {
       });
       setFiles(response.data.files || []);
     } catch (error) {
-      setNotification("Erro ao carregar arquivos.");
+      showNotification("Erro ao carregar arquivos.");
     } finally {
       setLoading(false);
     }
@@ -39,11 +40,11 @@ function FileList() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
-      setNotification("Selecione um arquivo PDF para enviar.");
+      showNotification("Selecione um arquivo PDF para enviar.");
       return;
     }
     if (selectedFile.type !== "application/pdf") {
-      setNotification("Apenas arquivos PDF são permitidos.");
+      showNotification("Apenas arquivos PDF são permitidos.");
       return;
     }
     setLoading(true);
@@ -57,11 +58,11 @@ function FileList() {
           "Content-Type": "multipart/form-data",
         },
       });
-      setNotification("Arquivo enviado com sucesso.");
+      showNotification("Arquivo enviado com sucesso.");
       setSelectedFile(null);
       fetchFiles();
     } catch (error) {
-      setNotification("Erro ao enviar arquivo. Tente novamente.");
+      showNotification("Erro ao enviar arquivo. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -75,10 +76,10 @@ function FileList() {
       await axiosInstance.delete(`http://localhost:3001/files/${filename}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotification("Arquivo deletado com sucesso.");
+      showNotification("Arquivo deletado com sucesso.");
       fetchFiles();
     } catch (error) {
-      setNotification("Erro ao deletar arquivo. Tente novamente.");
+      showNotification("Erro ao deletar arquivo. Tente novamente.");
     } finally {
       setLoading(false);
     }

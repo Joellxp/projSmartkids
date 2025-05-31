@@ -75,13 +75,7 @@ exports.createUser = async (req, res) => {
     logAction(`Criou usuário ${user.username} (${user.role})`, req.user.id);
 
     // Retorno filtrado
-    res.status(201).json({
-      id: user.id,
-      fullName: user.fullName,
-      username: user.username,
-      role: user.role,
-      photo: user.photo
-    });
+    res.status(201).json({ id: user.id, ...user.dataValues });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro ao criar usuário." });
@@ -98,7 +92,11 @@ exports.updateUser = async (req, res) => {
       logAction("Tentativa de acesso negado a recurso de admin", req.user.id);
       return res.status(403).json({ error: "Acesso restrito ao administrador." });
     }
-    if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
+    if (!user) {
+      const err = new Error("Usuário não encontrado");
+      err.status = 404;
+      throw err;
+    }
 
     // Sanitização dos campos
     if (fullName) user.fullName = sanitizeHtml(fullName);
@@ -110,13 +108,7 @@ exports.updateUser = async (req, res) => {
     logAction(`Atualizou usuário ${user.username} (${user.role})`, req.user.id);
 
     // Retorno filtrado
-    res.status(201).json({
-      id: user.id,
-      fullName: user.fullName,
-      username: user.username,
-      role: user.role,
-      photo: user.photo
-    });
+    res.status(201).json({ id: user.id, ...user.dataValues });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro ao atualizar usuário." });
@@ -151,7 +143,11 @@ exports.getUserById = async (req, res) => {
       logAction("Tentativa de acesso negado a dados de outro usuário", req.user.id);
       return res.status(403).json({ error: "Acesso negado." });
     }
-		if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+		if (!user) {
+      const err = new Error("Usuário não encontrado");
+      err.status = 404;
+      throw err;
+    }
 
 		res.json({
 			id: user.id,
@@ -217,5 +213,20 @@ exports.deletePdfFile = (req, res) => {
   } catch (err) {
     console.error("Erro ao deletar PDF:", err);
     res.status(500).json({ error: "Erro ao deletar PDF." });
+  }
+};
+
+// Obter usuário por ID (middleware)
+exports.getUser = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      const err = new Error("Usuário não encontrado");
+      err.status = 404;
+      throw err;
+    }
+    res.json(user);
+  } catch (error) {
+    next(error);
   }
 };

@@ -4,7 +4,7 @@ const { logAction } = require("../utils/auditLog");
 // Criar uma nova viagem
 exports.createTrip = async (req, res) => {
   try {
-    const { driverId, startTime } = req.body;
+    const { driverId, startTime, destino } = req.body;
     if (!driverId || !startTime) {
       return res.status(400).json({ error: "Condutor e data de início são obrigatórios." });
     }
@@ -15,17 +15,14 @@ exports.createTrip = async (req, res) => {
     if (isNaN(Date.parse(startTime)) || new Date(startTime) < new Date()) {
       return res.status(400).json({ error: "Data de início inválida ou no passado." });
     }
-    const trip = await Trip.create({ driverId, startTime });
+    if (!destino) {
+      return res.status(400).json({ error: "Destino é obrigatório." });
+    }
+    const trip = await Trip.create({ driverId, startTime, destino });
     logAction(`Criou viagem ${trip.id} (condutor: ${driverId})`, req.user.id);
 
     // Retorno filtrado
-    res.status(201).json({
-      id: trip.id,
-      driverId: trip.driverId,
-      startTime: trip.startTime,
-      endTime: trip.endTime,
-      status: trip.status
-    });
+    res.status(201).json({ id: trip.id, ...trip.dataValues });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro ao criar viagem." });
@@ -33,33 +30,12 @@ exports.createTrip = async (req, res) => {
 };
 
 // Listar todas as viagens
-exports.listTrips = async (req, res) => {
+exports.listTrips = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    const { count, rows } = await Trip.findAndCountAll({
-      offset,
-      limit,
-      order: [["createdAt", "DESC"]],
-    });
-
-    res.json({
-      total: count,
-      page,
-      pages: Math.ceil(count / limit),
-      trips: rows.map(trip => ({
-        id: trip.id,
-        driverId: trip.driverId,
-        startTime: trip.startTime,
-        endTime: trip.endTime,
-        status: trip.status
-      }))
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao listar viagens." });
+    const trips = await Trip.findAll();
+    res.json(trips); // <-- Deve ser um array SEMPRE
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -68,7 +44,11 @@ exports.endTrip = async (req, res) => {
   try {
     const { id } = req.params;
     const trip = await Trip.findByPk(id);
-    if (!trip) return res.status(404).json({ error: "Viagem não encontrada." });
+    if (!trip) {
+      const err = new Error("Viagem não encontrada.");
+      err.status = 404;
+      throw err;
+    }
     trip.endTime = new Date();
     trip.status = "completed";
     await trip.save();

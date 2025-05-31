@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Button from "../base/Button";
 import Card from "../base/Card";
 import Input from "../base/Input";
 import Loader from "../base/Loader";
 import Notification from "../base/Notification";
+import { useNotification } from "../../context/NotificationContext";
 
 function UserForm() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
 
@@ -19,7 +20,7 @@ function UserForm() {
     role: "common",
   });
   const [errors, setErrors] = useState({});
-  const [notification, setNotification] = useState("");
+  const { showNotification, notification } = useNotification();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,7 +47,7 @@ function UserForm() {
         role: response.data.role,
       });
     } catch (error) {
-      setNotification("Erro ao carregar usuário.");
+      showNotification("Erro ao carregar usuário.");
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ function UserForm() {
       return;
     }
     setLoading(true);
-    setNotification("");
+    showNotification("");
     try {
       const token = sessionStorage.getItem("token");
       if (isEdit) {
@@ -83,18 +84,17 @@ function UserForm() {
           form,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setNotification("Usuário atualizado com sucesso.");
+        showNotification("Usuário atualizado com sucesso.");
       } else {
         await axiosInstance.post(
           "http://localhost:3001/users",
           form,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setNotification("Usuário criado com sucesso.");
+        showNotification("Usuário criado com sucesso.");
       }
-      setTimeout(() => navigate("/users"), 1200);
     } catch (error) {
-      setNotification("Erro ao salvar usuário. Tente novamente.");
+      showNotification("Erro ao salvar usuário. Tente novamente.");
     } finally {
       setLoading(false);
     }

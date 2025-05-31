@@ -1,9 +1,8 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../database/db");
-const User = require("./User");
-const TripStudent = require("./TripStudent"); // Importe o model TripStudent
+const sequelize = require('../database/db');
+const { DataTypes } = require('sequelize');
+const User = require('./User');
 
-const Trip = sequelize.define("Trip", {
+const Trip = sequelize.define('Trip', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -13,8 +12,8 @@ const Trip = sequelize.define("Trip", {
     type: DataTypes.INTEGER,
     allowNull: false, // ID do condutor (usuário)
     references: {
-      model: User,
-      key: "id",
+      model: 'Users', // nome da tabela no banco de dados
+      key: 'id',
     },
   },
   startTime: {

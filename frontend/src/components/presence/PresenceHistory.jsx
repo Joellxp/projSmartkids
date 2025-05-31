@@ -3,12 +3,13 @@ import axiosInstance from "../../services/axiosInstance";
 import Card from "../base/Card";
 import Loader from "../base/Loader";
 import Notification from "../base/Notification";
+import { useNotification } from "../../context/NotificationContext";
 
 function PresenceHistory({ studentId: propStudentId }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
-  const role = sessionStorage.getItem("role");
+  const { showNotification, notification } = useNotification();
+//  const role = sessionStorage.getItem("role");
   const userId = sessionStorage.getItem("userId");
 
   // Se for responsável, pode passar o studentId como prop; se comum, usa o próprio userId
@@ -29,7 +30,7 @@ function PresenceHistory({ studentId: propStudentId }) {
       });
       setHistory(response.data.history || []);
     } catch (error) {
-      setNotification("Erro ao carregar histórico de presença.");
+      showNotification("Erro ao carregar histórico de presença.");
     } finally {
       setLoading(false);
     }

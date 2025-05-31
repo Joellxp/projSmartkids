@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import Button from "../base/Button";
 import Card from "../base/Card";
 import Loader from "../base/Loader";
-import Notification from "../base/Notification";
+import { useNotification } from "../../context/NotificationContext";
 
 function UserList() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     fetchUsers(page);
@@ -33,7 +33,7 @@ function UserList() {
       setUsers(response.data.users);
       setPages(response.data.pages);
     } catch (error) {
-      setNotification("Erro ao carregar usuários.");
+      showNotification("Erro ao carregar usuários.");
     } finally {
       setLoading(false);
     }
@@ -48,10 +48,10 @@ function UserList() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setNotification("Usuário deletado com sucesso.");
+      showNotification("Usuário deletado com sucesso.");
       fetchUsers(page);
     } catch (error) {
-      setNotification("Erro ao deletar usuário. Tente novamente.");
+      showNotification("Erro ao deletar usuário. Tente novamente.");
     }
   };
 
@@ -120,7 +120,6 @@ function UserList() {
           </Button>
         ))}
       </div>
-      {notification && <Notification>{notification}</Notification>}
     </Card>
   );
 }

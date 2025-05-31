@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import Button from "../base/Button";
 import Card from "../base/Card";
 import Loader from "../base/Loader";
-import Notification from "../base/Notification";
 import axiosInstance from "../../services/axiosInstance";
 import { useNavigate } from "react-router-dom";
 import Input from "../base/Input"; // Certifique-se de que o caminho para o componente Input esteja correto
+import { useNotification } from "../../context/NotificationContext";
 
 function TripForm() {
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState("");
   const [form, setForm] = useState({ campo: "" }); // Estado para os campos do formulário
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,7 +21,6 @@ function TripForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setNotification("");
     try {
       const token = sessionStorage.getItem("token");
       await axiosInstance.post(
@@ -29,10 +28,10 @@ function TripForm() {
         { ...form }, // Envie os dados do formulário na requisição
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNotification("Viagem criada com sucesso.");
-      setTimeout(() => navigate("/trips"), 1200);
+      showNotification("Viagem criada com sucesso.");
+      navigate("/trips");
     } catch (error) {
-      setNotification("Erro ao criar viagem.");
+      showNotification("Erro ao criar viagem.");
     } finally {
       setLoading(false);
     }
@@ -47,7 +46,6 @@ function TripForm() {
           {loading ? <Loader /> : "Criar"}
         </Button>
       </form>
-      {notification && <Notification>{notification}</Notification>}
     </Card>
   );
 }

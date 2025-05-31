@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
-const accessSecret = "chave_acesso_super_secreta";
+require('dotenv').config();
+
+const accessSecret = process.env.JWT_ACCESS_SECRET;
 
 // Middleware que protege rotas autenticadas
 function authMiddleware(req, res, next) {

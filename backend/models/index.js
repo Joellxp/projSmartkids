@@ -1,7 +1,8 @@
-const User = require("./User");
-const Trip = require("./Trip");
-const TripStudent = require("./TripStudent");
-const Payment = require("./Payment");
+const User = require('./User');
+const Trip = require('./Trip');
+const Payment = require('./Payment');
+const Student = require('./Student');
+const TripStudent = require('./TripStudent');
 
 // Relacionamentos
 Trip.belongsTo(User, { foreignKey: "driverId", as: "driver" });
@@ -23,4 +24,8 @@ User.belongsToMany(Trip, {
 Payment.belongsTo(User, { foreignKey: "userId", as: "user" });
 Payment.belongsTo(Trip, { foreignKey: "tripId", as: "trip" });
 
-module.exports = { User, Trip, TripStudent, Payment };
+// Relacionamento entre Student e User (responsável)
+Student.belongsTo(User, { foreignKey: 'responsibleId', as: 'responsible' });
+User.hasMany(Student, { foreignKey: 'responsibleId', as: 'students' });
+
+module.exports = { User, Trip, Payment, Student };

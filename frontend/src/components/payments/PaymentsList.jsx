@@ -4,14 +4,16 @@ import Card from "../base/Card";
 import Button from "../base/Button";
 import Loader from "../base/Loader";
 import Notification from "../base/Notification";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
+import { useNotification } from "../../context/NotificationContext";
 
 function PaymentsList() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
+  const { showNotification, notification } = useNotification();
   const role = sessionStorage.getItem("role");
   const userId = sessionStorage.getItem("userId");
+  
 
   useEffect(() => {
     fetchPayments();
@@ -31,7 +33,7 @@ function PaymentsList() {
       });
       setPayments(response.data.payments || response.data || []);
     } catch (error) {
-      setNotification("Erro ao carregar pagamentos.");
+      showNotification("Erro ao carregar pagamentos.");
     } finally {
       setLoading(false);
     }
@@ -41,8 +43,22 @@ function PaymentsList() {
     // Lógica para criar um novo pagamento
   };
 
-  const handleMarkAsPaid = (paymentId) => {
-    // Lógica para marcar o pagamento como pago
+  const handleMarkAsPaid = async (paymentId) => {
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem("token");
+      await axiosInstance.patch(
+        `http://localhost:3001/payments/${paymentId}`,
+        { status: "paid" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showNotification("Pagamento marcado como pago.");
+      fetchPayments();
+    } catch (error) {
+      showNotification("Erro ao atualizar pagamento.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

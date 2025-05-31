@@ -6,13 +6,14 @@ import Loader from "../base/Loader";
 import Notification from "../base/Notification";
 import axiosInstance from "../../services/axiosInstance";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../../context/NotificationContext";
 
 function PaymentForm() {
   const [form, setForm] = useState({ tripId: "", amount: "" });
   const [errors, setErrors] = useState({});
-  const [notification, setNotification] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const validate = () => {
     const newErrors = {};
@@ -31,7 +32,6 @@ function PaymentForm() {
       return;
     }
     setLoading(true);
-    setNotification("");
     try {
       const token = sessionStorage.getItem("token");
       await axiosInstance.post(
@@ -39,10 +39,10 @@ function PaymentForm() {
         { ...form, amount: Number(form.amount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNotification("Pagamento criado com sucesso.");
-      setTimeout(() => navigate("/payments"), 1200);
+      showNotification("Pagamento criado com sucesso.");
+      navigate("/payments");
     } catch (error) {
-      setNotification("Erro ao criar pagamento. Tente novamente.");
+      showNotification("Erro ao criar pagamento.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ function PaymentForm() {
           {loading ? <Loader /> : "Criar"}
         </Button>
       </form>
-      {notification && <Notification>{notification}</Notification>}
+      <Notification />
     </Card>
   );
 }

@@ -1,34 +1,41 @@
-const Payment = require("../models/Payment");
+const { Payment } = require('../models');
 const { sendPaymentNotification } = require("../services/emailService");
 const User = require("../models/User");
 const Trip = require("../models/Trip");
 const { logAction } = require("../utils/auditLog");
 
 // Criar pagamento
-exports.createPayment = async (req, res) => {
+async function createPayment(req, res, next) {
   try {
     const { userId, tripId, amount } = req.body;
 
-    // Validação manual dos campos obrigatórios com mensagens claras
     if (!userId || !tripId || amount === undefined) {
-      return res.status(400).json({ error: "Usuário, viagem e valor do pagamento são obrigatórios." });
+      const err = new Error("Usuário, viagem e valor do pagamento são obrigatórios.");
+      err.status = 400;
+      throw err;
     }
     if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ error: "O valor do pagamento deve ser maior que zero." });
+      const err = new Error("O valor do pagamento deve ser maior que zero.");
+      err.status = 400;
+      throw err;
     }
     const paymentUser = await User.findByPk(userId);
     if (!paymentUser) {
-      return res.status(404).json({ error: "Usuário não encontrado." });
+      const err = new Error("Usuário não encontrado.");
+      err.status = 404;
+      throw err;
     }
     const trip = await Trip.findByPk(tripId);
     if (!trip) {
-      return res.status(404).json({ error: "Viagem não encontrada." });
+      const err = new Error("Viagem não encontrada.");
+      err.status = 404;
+      throw err;
     }
-    // Impede que um usuário comum crie pagamento para outro
     if (req.user.role === "common" && req.user.id !== userId) {
-      return res.status(403).json({ error: "Você só pode pagar por você mesmo." });
+      const err = new Error("Você só pode pagar por você mesmo.");
+      err.status = 403;
+      throw err;
     }
-    // Impede duplicidade de pagamento
     const existing = await Payment.findOne({
       where: {
         userId,
@@ -37,21 +44,21 @@ exports.createPayment = async (req, res) => {
       },
     });
     if (existing) {
-      return res.status(400).json({ error: "Já existe um pagamento para este usuário e viagem." });
+      const err = new Error("Já existe um pagamento para este usuário e viagem.");
+      err.status = 400;
+      throw err;
     }
-    // Se o usuário autenticado for responsável, só pode criar pagamento para seus estudantes
     if (req.user.role === "responsavel") {
       if (!paymentUser || paymentUser.responsibleId !== req.user.id) {
-        return res.status(403).json({
-          error: "Você só pode pagar pelos seus estudantes.",
-        });
+        const err = new Error("Você só pode pagar pelos seus estudantes.");
+        err.status = 403;
+        throw err;
       }
     }
 
     const payment = await Payment.create({ userId, tripId, amount });
     logAction(`Criou pagamento para viagem ${tripId} (valor: R$${amount})`, req.user.id);
 
-    // Retorno filtrado
     res.status(201).json({
       id: payment.id,
       userId: payment.userId,
@@ -61,17 +68,17 @@ exports.createPayment = async (req, res) => {
       paymentDate: payment.paymentDate
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao criar pagamento." });
+    next(error);
   }
-};
+}
 
 // Listar todos os pagamentos
-exports.listPayments = async (req, res) => {
+async function listPayments(req, res, next) {
   try {
     if (req.user.role !== "admin") {
-      logAction("Tentativa de acesso negado à listagem de pagamentos", req.user.id);
-      return res.status(403).json({ error: "Acesso restrito ao administrador." });
+      const err = new Error("Acesso restrito ao administrador.");
+      err.status = 403;
+      throw err;
     }
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -97,44 +104,51 @@ exports.listPayments = async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao listar pagamentos." });
+    next(error);
   }
-};
+}
 
 // Buscar status do pagamento
-exports.getPaymentStatus = async (req, res) => {
+async function getPaymentStatus(req, res, next) {
   try {
     const { id } = req.params;
     const payment = await Payment.findByPk(id);
     if (req.user.role !== "admin" && req.user.id !== parseInt(req.params.id)) {
-      return res.status(403).json({ error: "Acesso negado." });
+      const err = new Error("Acesso negado.");
+      err.status = 403;
+      throw err;
     }
-    if (!payment)
-      return res.status(404).json({ error: "Pagamento não encontrado." });
+    if (!payment) {
+      const err = new Error("Pagamento não encontrado.");
+      err.status = 404;
+      throw err;
+    }
     res.json({ status: payment.status });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar status do pagamento." });
+    next(error);
   }
-};
+}
 
 // Marcar pagamento como pago
-exports.markAsPaid = async (req, res) => {
+async function markAsPaid(req, res, next) {
   try {
     const { id } = req.params;
     const payment = await Payment.findByPk(id);
     if (req.user.role !== "admin") {
-      return res.status(403).json({ error: "Acesso restrito ao administrador." });
+      const err = new Error("Acesso restrito ao administrador.");
+      err.status = 403;
+      throw err;
     }
-    if (!payment)
-      return res.status(404).json({ error: "Pagamento não encontrado." });
+    if (!payment) {
+      const err = new Error("Pagamento não encontrado.");
+      err.status = 404;
+      throw err;
+    }
     payment.status = "paid";
     payment.paymentDate = new Date();
     await payment.save();
     logAction(`Marcou pagamento ${payment.id} como pago`, req.user.id);
 
-    // Retorno filtrado
     res.json({
       id: payment.id,
       userId: payment.userId,
@@ -144,18 +158,18 @@ exports.markAsPaid = async (req, res) => {
       paymentDate: payment.paymentDate
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao atualizar pagamento." });
+    next(error);
   }
-};
+}
 
 // Listar pagamentos de um usuário específico
-exports.listPaymentsByUser = async (req, res) => {
+async function listPaymentsByUser(req, res, next) {
   try {
     const userId = parseInt(req.params.userId);
     if (req.user.role !== "admin" && req.user.id !== userId) {
-      logAction("Tentativa de acesso negado aos pagamentos de outro usuário", req.user.id);
-      return res.status(403).json({ error: "Acesso negado." });
+      const err = new Error("Acesso negado.");
+      err.status = 403;
+      throw err;
     }
     const payments = await Payment.findAll({ where: { userId } });
     res.json(payments.map(payment => ({
@@ -167,18 +181,18 @@ exports.listPaymentsByUser = async (req, res) => {
       paymentDate: payment.paymentDate
     })));
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao listar pagamentos do usuário." });
+    next(error);
   }
-};
+}
 
 // Listar pagamentos de uma viagem específica
-exports.listPaymentsByTrip = async (req, res) => {
+async function listPaymentsByTrip(req, res, next) {
   try {
     const tripId = parseInt(req.params.tripId);
     if (req.user.role !== "admin") {
-      logAction("Tentativa de acesso negado aos pagamentos de uma viagem", req.user.id);
-      return res.status(403).json({ error: "Acesso restrito ao administrador." });
+      const err = new Error("Acesso restrito ao administrador.");
+      err.status = 403;
+      throw err;
     }
     const payments = await Payment.findAll({ where: { tripId } });
     res.json(payments.map(payment => ({
@@ -190,7 +204,31 @@ exports.listPaymentsByTrip = async (req, res) => {
       paymentDate: payment.paymentDate
     })));
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao listar pagamentos da viagem." });
+    next(error);
   }
+}
+
+// Buscar pagamento por ID
+async function getPayment(req, res, next) {
+  try {
+    const payment = await Payment.findByPk(req.params.id);
+    if (!payment) {
+      const err = new Error("Pagamento não encontrado");
+      err.status = 404;
+      throw err;
+    }
+    res.json(payment);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  createPayment,
+  listPayments,
+  getPaymentStatus,
+  markAsPaid,
+  listPaymentsByUser,
+  listPaymentsByTrip,
+  getPayment
 };

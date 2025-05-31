@@ -1,37 +1,57 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const authMiddleware = require("../middleware/authMiddleware");
+const multer = require("multer");
+const fileController = require("../controllers/fileController");
 
 // Configuração de armazenamento
 const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
+const pdfUpload = multer({ storage });
 
-const pdfUpload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') cb(null, true);
-    else cb(new Error('Somente PDFs são permitidos'));
-  }
-});
+/**
+ * @swagger
+ * /files:
+ *   post:
+ *     summary: Faz upload de um arquivo PDF
+ *     tags: [Arquivos]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Arquivo enviado
+ */
+router.post('/', authMiddleware, pdfUpload.single('file'), fileController.uploadFile);
 
-// Upload de arquivo PDF
-router.post('/', authMiddleware, pdfUpload.single('file'), (req, res) => {
-  res.json({ filename: req.file.filename });
-});
-
-// Listar arquivos PDF
-router.get('/', authMiddleware, (req, res) => {
-  const files = fs.readdirSync('./uploads/');
-  const pdfs = files.filter(file => file.endsWith('.pdf'));
-  res.json(pdfs);
-});
+/**
+ * @swagger
+ * /files:
+ *   get:
+ *     summary: Lista arquivos PDF
+ *     tags: [Arquivos]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de arquivos
+ */
+router.get('/', authMiddleware, fileController.listFiles);
 
 // Deletar arquivo PDF
 router.delete('/:name', authMiddleware, (req, res) => {

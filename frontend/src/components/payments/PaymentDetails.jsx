@@ -4,14 +4,15 @@ import Card from "../base/Card";
 import Button from "../base/Button";
 import Loader from "../base/Loader";
 import Notification from "../base/Notification";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useNotification } from "../../context/NotificationContext";
 
 function PaymentDetails() {
   const { id } = useParams();
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
-  const navigate = useNavigate();
+  const { showNotification, notification } = useNotification();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     fetchPayment();
@@ -28,7 +29,7 @@ function PaymentDetails() {
       );
       setPayment(response.data);
     } catch (error) {
-      setNotification("Erro ao carregar pagamento.");
+      showNotification("Erro ao carregar pagamento.");
     } finally {
       setLoading(false);
     }
@@ -43,10 +44,9 @@ function PaymentDetails() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNotification("Pagamento marcado como pago.");
-      setTimeout(() => navigate("/payments"), 1200);
+      showNotification("Pagamento marcado como pago.");
     } catch (error) {
-      setNotification("Erro ao atualizar pagamento. Tente novamente.");
+      showNotification("Erro ao atualizar pagamento. Tente novamente.");
     } finally {
       setLoading(false);
     }
