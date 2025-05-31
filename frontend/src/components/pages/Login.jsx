@@ -40,6 +40,14 @@ export default function Login({ updateAuthStatus }) {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const msg = sessionStorage.getItem("logoutMsg");
+    if (msg) {
+      setNotification(msg);
+      sessionStorage.removeItem("logoutMsg");
+    }
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };

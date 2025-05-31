@@ -67,7 +67,7 @@ function Sidebar() {
 				style={{ width: "100%", marginTop: 24, background: "#6aa839" }}
 				onClick={() => {
 					sessionStorage.clear();
-					navigate("/login");
+					window.location.href = "/login";
 				}}
 			>
 				Sair

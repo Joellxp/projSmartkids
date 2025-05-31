@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client";
+// import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { ThemeProvider, CssBaseline } from '@mui/material';
+// import { ThemeProvider, CssBaseline } from '@mui/material';
 import Login from "./components/pages/Login";
 import Home from "./components/pages/Home";
 import Layout from "./components/layout/Layout";
@@ -22,15 +22,16 @@ import Reports from "./components/reports/Reports";
 import Notification from "./components/base/Notification";
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import { registerNotification } from "./services/axiosInstance";
-import Button from "./components/base/Button";
-import theme from './styles/theme';
+// import Button from "./components/base/Button";
+// import theme from './styles/theme';
+import ProfileSettings from "./components/pages/ProfileSettings";
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(
         sessionStorage.getItem("token") !== null
     );
     const location = useLocation();
-    const { message, clearNotification, showNotification } = useNotification();
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         registerNotification(showNotification);
@@ -43,8 +44,8 @@ function App() {
     const updateAuthStatus = (status) => setIsAuthenticated(status);
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
+        <>
+            <Notification />
             <Layout sidebar={isAuthenticated ? <Sidebar updateAuthStatus={updateAuthStatus} /> : null}>
                 {isAuthenticated && <UserHeader user={{
                     fullName: sessionStorage.getItem("fullName"),
@@ -119,6 +120,11 @@ function App() {
                                 ? <Reports />
                                 : <Navigate to="/login" />
                         } />
+                        <Route path="/profile" element={
+                            isAuthenticated
+                                ? <ProfileSettings />
+                                : <Navigate to="/login" />
+                        } />
                         <Route path="/files" element={
                             isAuthenticated
                                 ? <FileList />
@@ -127,26 +133,17 @@ function App() {
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </main>
-                {message && (
-                    <Notification>
-                        {message}
-                        <Button onClick={clearNotification} style={{ marginLeft: 16 }}>X</Button>
-                    </Notification>
-                )}
             </Layout>
-        </ThemeProvider>
+        </>
     );
 }
 
 export default function AppWrapper() {
-    return (
-        <NotificationProvider>
-            <Router>
-                <App />
-            </Router>
-        </NotificationProvider>
-    );
+  return (
+    <NotificationProvider>
+      <Router>
+        <App />
+      </Router>
+    </NotificationProvider>
+  );
 }
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<AppWrapper />);

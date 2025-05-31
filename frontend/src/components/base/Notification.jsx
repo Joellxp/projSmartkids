@@ -1,19 +1,37 @@
-import styled from "styled-components";
+import { useNotification } from "../../context/NotificationContext";
 
-const Notification = styled.div`
-  position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: ${({ theme }) => theme.colors.secondary};
-  color: ${({ theme }) => theme.colors.white};
-  padding: 16px 32px;
-  border-radius: ${({ theme }) => theme.borderRadius};
-  box-shadow: 0 2px 12px rgba(157, 113, 75, 0.15);
-  font-size: 1.1rem;
-  z-index: 1000;
-  min-width: 200px;
-  text-align: center;
-`;
-
-export default Notification;
+export default function Notification() {
+  const { message, clearNotification } = useNotification();
+  if (!message) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 16,
+        right: 16,
+        background: "#333",
+        color: "#fff",
+        padding: "12px 24px",
+        borderRadius: 8,
+        zIndex: 9999,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+      }}
+    >
+      {message}
+      <button
+        onClick={clearNotification}
+        style={{
+          marginLeft: 16,
+          background: "none",
+          color: "#fff",
+          border: "none",
+          fontWeight: "bold",
+          cursor: "pointer",
+        }}
+        aria-label="Fechar notificação"
+      >
+        ×
+      </button>
+    </div>
+  );
+}

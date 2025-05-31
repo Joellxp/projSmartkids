@@ -39,6 +39,8 @@ app.use("/payments", paymentRoutes);
 app.use("/reports", reportRoutes);
 // Rota de estudantes
 app.use("/students", studentRoutes);
+// Rota de perfil
+app.use("/profile", require("./routes/profile"));
 
 // Rota de upload de arquivos
 app.use('/uploads', express.static('uploads'));
